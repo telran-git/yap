@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Http
+END
+Cookie.php
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Http/Cookie.php
+END
+Client.php
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Http/Client.php
+END
+Exception.php
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Http/Exception.php
+END
+Response.php
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Http/Response.php
+END
+CookieJar.php
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Http/CookieJar.php
+END

@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File
+END
+Extension.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/Extension.php
+END
+ImageSize.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/ImageSize.php
+END
+FilesSize.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/FilesSize.php
+END
+Exists.php
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/Exists.php
+END
+NotExists.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/NotExists.php
+END
+Upload.php
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/Upload.php
+END
+Count.php
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/Count.php
+END
+MimeType.php
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/MimeType.php
+END
+Size.php
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/390/tags/0.9.5/phpQuery/phpQuery/Zend/Validate/File/Size.php
+END
