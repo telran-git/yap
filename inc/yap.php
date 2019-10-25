@@ -54,9 +54,9 @@ error_log('parseActListPage');
 //    foreach($inhtml->find($conf['acontainer'].' li div.wrap-post') as $act) {
     foreach($inhtml[$conf['acontainer'].' li div.wrap-post'] as $act) {
 	if (count(pq($act)->find('div.discount')) > 0 ) {
-	    $curact['dsc'] = pq($act)->find('div.discount span.number')[0]->text();
-	    $curact['href'] = pq($act)->find('div.image a')[0]->attr('href');
-	    $curact['title'] = htmlspecialchars_decode(trim(pq($act)->find('div.content div.title a')[0]->text()));
+	    $curact['dsc'] = pq($act)->find('div.discount span.number')->eq(0)->text();
+	    $curact['href'] = pq($act)->find('div.image a')->eq(0)->attr('href');
+	    $curact['title'] = htmlspecialchars_decode(trim(pq($act)->find('div.content div.title a')->eq(0)->text()));
 	    $id = basename($curact['href']);
 
 	    $actions[$id] = $curact;
@@ -70,7 +70,8 @@ function _getDatesFromStr($s) {
     $actions = &$_SESSION['actions'];
 
 //  Период проведения акции с 15 октября по 22 октября 2019 года
-    $months = ['января' => '01', 'февраля' => '02', 'марта' => '03', 'апреля' => '04', 'мая' => '05', 'июня' => '06', 'июля' => '07', 'августа' => '08', 'сентября' => '09', 'октября' => '10', 'ноября' => '11', 'декабря' => '12'];
+    $months = array('января' => '01', 'февраля' => '02', 'марта' => '03', 'апреля' => '04', 'мая' => '05', 'июня' => '06', 'июля' => '07', 'августа' => '08', 'сентября' => '09', 'октября' => '10', 'ноября' => '11', 'декабря' => '12');
+//    $months = ['января' => '01', 'февраля' => '02', 'марта' => '03', 'апреля' => '04', 'мая' => '05', 'июня' => '06', 'июля' => '07', 'августа' => '08', 'сентября' => '09', 'октября' => '10', 'ноября' => '11', 'декабря' => '12'];
 
     list( , , , , $sd, $sm, , $ed, $em, $y ) = explode(" ", $s);
 
@@ -105,21 +106,21 @@ error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 	    if (count(pq($b)->find('div.discount')) == 0) {
 		$book['dsc'] = '';
-		$book['old-price'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.price_button .regular-price span.price')[0]->text()));
+		$book['old-price'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.price_button .regular-price span.price')->eq(0)->text()));
 		$book['special-price'] = '';
 	    } else {
-		$book['dsc'] = pq($b)->find('div.discount')[0]->text();
-		$book['old-price'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.price_button .old-price span.price')[0]->text()));
-		$book['special-price'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.price_button p.special-price span.price')[0]->text()));
+		$book['dsc'] = pq($b)->find('div.discount')->eq(0)->text();
+		$book['old-price'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.price_button .old-price span.price')->eq(0)->text()));
+		$book['special-price'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.price_button p.special-price span.price')->eq(0)->text()));
 	    }
 
-	    $book['href'] = pq($b)->find('div.content a')[0]->attr('href');
-	    $book['code'] = pq($b)->find('div.label-sku span.code')[0]->text();
-	    $book['name'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.name div.full-name')[0]->text()));
-	    $book['autor'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.autor div.product-author')[0]->text()));
-	    $book['publisher'] = pq($b)->find('div.additional-information div#attribute-book_publisher span.val')[0]->text();
-	    $book['lang'] = pq($b)->find('div.additional-information div#attribute-book_lang span.val')[0]->text();
-	    $book['year'] = pq($b)->find('div.additional-information div#attribute-book_year span.val')[0]->text();
+	    $book['href'] = pq($b)->find('div.content a')->eq(0)->attr('href');
+	    $book['code'] = pq($b)->find('div.label-sku span.code')->eq(0)->text();
+	    $book['name'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.name div.full-name')->eq(0)->text()));
+	    $book['autor'] = htmlspecialchars_decode(trim(pq($b)->find('div.caption tr.autor div.product-author')->eq(0)->text()));
+	    $book['publisher'] = pq($b)->find('div.additional-information div#attribute-book_publisher span.val')->eq(0)->text();
+	    $book['lang'] = pq($b)->find('div.additional-information div#attribute-book_lang span.val')->eq(0)->text();
+	    $book['year'] = pq($b)->find('div.additional-information div#attribute-book_year span.val')->eq(0)->text();
 
 //var_dump($book);
 //	    $actions[$id]['books'][$bid] = $book;
