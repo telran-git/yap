@@ -1,6 +1,6 @@
 <?php
 include_once('inc/config.php');
-include('inc/phpQuery/phpQuery.php');
+include_once('inc/phpQuery/phpQuery.php');
 
 //session_start();
 
@@ -84,16 +84,19 @@ function _getDatesFromStr($s) {
     return array('sdate' => $sdate, 'edate' => $edate);
 }
 
-function parseActPage($id,$inhtml) {
+function parseActPage($id,$inhtml,$skip=false) {
     global $conf;
     $actions = &$_SESSION['actions'];
 
 //    echo "parseActPage $id<br />";
-error_log('parseActPage id ['.$id.']');
+error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 
     foreach($inhtml[$conf['bcontainer'].' li.item'] as $b) {
 //	    $book = array();
+
+// При установленном флаге skip пропускаем книги без скидок
+	    if ((count(pq($b)->find('div.discount')) == 0) && $skip) continue;
 
 	    $bid = pq($b)->attr('data-product-id');
 
@@ -143,45 +146,58 @@ error_log('parseActPage id ['.$id.'] book_count['.count($actions[$id]['books']).
 
 }
 
-function parseActions($id,$inhtml,$fullparse=true) {
+function parseActions($id,$inhtml,$skip=false) {
     global $conf;
     $actions = &$_SESSION['actions'];
 
 $start = microtime(true);
 
 //    echo "parseActions $id<br />";
-error_log('parseActions id ['.$id.'] fullparse ['.($fullparse ? 'true' : 'false').']');
+error_log('parseActions id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 //  Дополнение массива акций данными Начало/Коцец периода
     $tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
     $actions[$id] = array_merge($actions[$id],_getDatesFromStr($tstr));
 
-    if($fullparse) {
-	$actions[$id]['bpages'] = array();
-    // Формирование массива ссылок страниц списка книг в текущей акции
-	makePageList($inhtml,$actions[$id]['bpages']);
+    $actions[$id]['bpages'] = array();
+// Формирование массива ссылок страниц списка книг в текущей акции
+    makePageList($inhtml,$actions[$id]['bpages']);
 
-    //
-	$actions[$id]['books'] = array();
+//
+    $actions[$id]['books'] = array();
 
-	parseActPage($id,$inhtml);
+    parseActPage($id,$inhtml,$skip);
 
-    // Если список книг больше чем на одну страницу - цикл по страницам 2+
-	if (count($actions[$id]['bpages']) > 0)
-	    foreach ($actions[$id]['bpages'] as $curlnk) {
-		if (isset($html)) unset($html);
-		
-		$html = readByLink($curlnk);
-		parseActPage($id,$html);
-	    }
+// Если список книг больше чем на одну страницу - цикл по страницам 2+
+    if (count($actions[$id]['bpages']) > 0)
+	foreach ($actions[$id]['bpages'] as $curlnk) {
+	    if (isset($html)) unset($html);
+
+	    $html = readByLink($curlnk);
+	    parseActPage($id,$html,$skip);
+	}
 
     //var_dump($actions[$id]['books']);
     error_log('parseActions id ['.$id.'] book_count['.count($actions[$id]['books']).']');
 
-    }
+
 error_log('TIME '.round(microtime(true) - $start, 4).' s');
 }
 
+function parseActionPeriod($id,$inhtml) {
+    global $conf;
+    $actions = &$_SESSION['actions'];
 
+$start = microtime(true);
+
+//    echo "parseActions $id<br />";
+error_log('parseActionPeriod id ['.$id.']');
+
+//  Дополнение массива акций данными Начало/Коцец периода
+    $tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
+    $actions[$id] = array_merge($actions[$id],_getDatesFromStr($tstr));
+
+error_log('TIME '.round(microtime(true) - $start, 4).' s');
+}
 
 ?>

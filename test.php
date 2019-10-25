@@ -1,10 +1,10 @@
 <?php
 include_once('inc/config.php');
-include('inc/xlsxwriter.class.php');
+include_once('inc/xlsxwriter.class.php');
 
 include_once('inc/yap.php');
 
-if (!isset($_REQUEST['actid']))
+if (!isset($_REQUEST['submit']))
 //    if (!isset($_SESSION['actions']))
 	$_SESSION['actions'] = array();
 
@@ -14,7 +14,7 @@ $actions = &$_SESSION['actions'];
 $apages = array();
 $bpages = array();
 
-function  writeXSLX() {
+function  writeXSLX($rst) {
     global $actions;
 
     $header = array(
@@ -43,6 +43,8 @@ function  writeXSLX() {
     $writer->writeSheetHeader($sheet_name, $header );
 
     foreach ($actions as $aid => $act) {
+	if (count($rst))
+	    if (!in_array($aid, $rst)) continue;
 	if (isset($act['books']) && is_array($act['books']))
 	foreach ($act['books'] as $book) {
 	    $writer->writeSheetRow($sheet_name, array(
@@ -152,6 +154,9 @@ EOT;
 $out .= <<<EOT
 	    </table>
 	    <br />
+	    <div class="chk" style="padding: 4px 8px;">
+		<input type="checkbox" name="skip" checked="true"><span>Игнорировать книги без скидок</span>
+	    </div>
 	    <button type="submit" name="submit" value="selected">load selected</button>
 	    <button type="submit" name="submit" value="all">load all</button>
 	</form>
@@ -172,26 +177,30 @@ echo $out;
 
 if (is_array($_REQUEST) && count($_REQUEST)) {
 //var_dump($_REQUEST);
-        print_r($_REQUEST);
-die();
+//print_r($_REQUEST);
+error_log('$_REQUEST ['.print_r($_REQUEST,true).']');
+//die();
 }
-error_log('$_REQUEST[actid] ['.$_REQUEST['actid'].']');
+error_log('$_REQUEST[submit] ['.$_REQUEST['submit'].']');
 
 error_log('START count($actions) ['.count($actions).']');
 
 if (isset($_REQUEST['submit'])) {
     $error = false;
     $errorstr = '';
+    $rst = array();
+    $skip = isset($_REQUEST['skip']);
 
     if (is_numeric($_REQUEST['submit'])) {
 	if (isset($actions[$_REQUEST['submit']]) && is_array($actions[$_REQUEST['submit']])) {
+	    $rst[] = $_REQUEST['submit'];
 //  Парсинг содержимого страницы акции с указанным ID
 	    if (isset($html)) unset($html);
 	    $html = readByLink($actions[$_REQUEST['submit']]['href']);
-            parseActions($_REQUEST['actid'],$html);
+            parseActions($_REQUEST['submit'],$html,$skip);
 	} else {
 	    $error = true;
-	    $errorstr .= '!!!! Can`t find actions with ID ['.$_REQUEST['submit'].']<br />\n';
+	    $errorstr .= "!!!! Can`t find actions with ID [".$_REQUEST['submit']."]<br />\n";
 	}
     } elseif ($_REQUEST['submit'] == 'all') {
 //  Цикл по списку акций, парсинг содержимого страницы акции
@@ -199,24 +208,31 @@ if (isset($_REQUEST['submit'])) {
 	    foreach ($actions as $id => $act) {
 		if (isset($html)) unset($html);
 		$html = readByLink($act['href']);
-		parseActions($id,$html);
+		parseActions($id,$html,$skip);
     //break;
 	    }
     } elseif ($_REQUEST['submit'] == 'selected') {
-	if (isset($actions[$_REQUEST['chk']])) {
-	    if (is_array($actions[$_REQUEST['chk']]) && count($actions[$_REQUEST['chk']]) > 0) {
-
+	if (isset($_REQUEST['chk'])) {			// Параметн chk вообще присутствует
+	    if (is_array($_REQUEST['chk']) && count($_REQUEST['chk']) > 0) { // ...он массив, и не пустой
+		foreach($_REQUEST['chk'] as $aid) {
+		    if (array_key_exists($aid,$actions)) {
+			$rst[] = $aid;
+			if (isset($html)) unset($html);
+			$html = readByLink($actions[$aid]['href']);
+			parseActions($aid,$html,$skip);
+		    }
+		}
 	    } else {	// Передан не массив или пустой массив
 		$error = true;
-		$errorstr .= '!!!! Wrong array chk[] ['.print_r($_REQUEST['chk']).']<br />\n';
+		$errorstr .= "!!!! Wrong array chk[] [".print_r($_REQUEST['chk'],true)."]<br />";
 	    }
 	} else {    	// Вообще не передан массив
 	    $error = true;
-	    $errorstr .= '!!!! Missed param chk[] in $_REQUEST ['.print_r($_REQUEST).']<br />\n';
+	    $errorstr .= '!!!! Missed param chk[] in $_REQUEST ['.print_r($_REQUEST,true)."]<br />\n";
 	}
     } else {		// Хз, что передали
 	$error = true;
-	$errorstr .= '!!!! Wrong $_REQUEST ['.print_r($_REQUEST).']<br />\n';
+	$errorstr .= '!!!! Wrong $_REQUEST ['.print_r($_REQUEST,true)."]<br />\n";
     }
 
 //var_dump($actions);
@@ -224,7 +240,7 @@ if (isset($_REQUEST['submit'])) {
 error_log('END count($actions) ['.count($actions).']');
 
     if(!$error)
-	writeXSLX();
+	writeXSLX($rst);
     else {
         header('Content-Type: text/html; charset=utf-8');
 	echo $errorstr;
@@ -258,7 +274,7 @@ error_log('END count($actions) ['.count($actions).']');
     if (count($actions) > 0)
 	foreach ($actions as $id => $act) {
 	    $html = readByLink($act['href']);
-	    parseActions($id,$html,false);
+	    parseActionPeriod($id,$html);
 //break;
 	}
 
