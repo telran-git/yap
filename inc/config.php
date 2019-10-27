@@ -28,4 +28,7 @@ $conf = array(
     
 );
 
+date_default_timezone_set('Europe/Kiev');
+mb_internal_encoding("UTF-8");
+
 ?>

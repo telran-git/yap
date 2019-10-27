@@ -75,10 +75,10 @@ function _getDatesFromStr($s) {
 
     list( , , , , $sd, $sm, , $ed, $em, $y ) = explode(" ", $s);
 
-    $sdate = "$sd ".strtolower($sm)." $y";
+    $sdate = "$sd ".mb_strtolower($sm)." $y";
     $arr = explode(' ', $sdate);
     $sdate = $arr[2].'-'.$months[$arr[1]].'-'.$arr[0];
-    $edate = "$ed ".strtolower($em)." $y";
+    $edate = "$ed ".mb_strtolower($em)." $y";
     $arr = explode(' ', $edate);
     $edate = $arr[2].'-'.$months[$arr[1]].'-'.$arr[0];
 
