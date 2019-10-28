@@ -175,15 +175,15 @@ echo $out;
 }
 
 
-if (is_array($_REQUEST) && count($_REQUEST)) {
+if ($conf['debug'] && is_array($_REQUEST) && count($_REQUEST)) {
 //var_dump($_REQUEST);
 //print_r($_REQUEST);
 error_log('$_REQUEST ['.print_r($_REQUEST,true).']');
 //die();
 }
-error_log('$_REQUEST[submit] ['.$_REQUEST['submit'].']');
+if ($conf['debug']) error_log('$_REQUEST[submit] ['.$_REQUEST['submit'].']');
 
-error_log('START count($actions) ['.count($actions).']');
+if ($conf['debug']) error_log('START count($actions) ['.count($actions).']');
 
 if (isset($_REQUEST['submit'])) {
     $error = false;
@@ -237,7 +237,7 @@ if (isset($_REQUEST['submit'])) {
 
 //var_dump($actions);
 
-error_log('END count($actions) ['.count($actions).']');
+if ($conf['debug']) error_log('END count($actions) ['.count($actions).']');
 
     if(!$error)
 	writeXSLX($rst);
@@ -281,7 +281,7 @@ error_log('END count($actions) ['.count($actions).']');
 //var_dump($actions);
 
 //}
-error_log('END count($actions) ['.count($actions).']');
+if ($conf['debug']) error_log('END count($actions) ['.count($actions).']');
 
 
     showActTbl();

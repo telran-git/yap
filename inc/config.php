@@ -12,7 +12,7 @@ $db_conf = array(
     'db'        => 'd:/fb/iscra_d.fdb',
 //'db' => 'd:/fb/iscra.fdb',
     'user'      => 'SYSDBA',
-    'pass'      => 'manager',
+    'pass'      => '',
     'charset'   => 'WIN1251',
     'dialect'   => '3',
     'ver'       => 'FB_1.5',
@@ -25,7 +25,7 @@ $conf = array(
     'pcontainer'   => 'div.pagination',
     'acontainer'   => 'ul.blog-posts__list',
     'bcontainer'   => 'ul.products-grid',
-    
+    'debug'	    =>	false,
 );
 
 date_default_timezone_set('Europe/Kiev');

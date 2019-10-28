@@ -10,7 +10,8 @@ $apages = array();
 $bpages = array();
 
 function readByLink($lnk) {
-error_log('readByLink href ['.$lnk.']');
+    global $conf;
+if ($conf['debug']) error_log('readByLink href ['.$lnk.']');
 
     $doc = phpQuery::newDocumentFile($lnk);
 
@@ -21,7 +22,7 @@ function makePageList($inhtml,&$pg) {
     global $conf;
 
 //    echo "makePageList<br />";
-error_log('makePageList');
+if ($conf['debug']) error_log('makePageList');
 
 // Если нет "разрывов" (...) в списке страниц
     if (count($inhtml->find($conf['pcontainer'].' ul li.next_jump_li')) == 0)
@@ -48,7 +49,7 @@ function parseActListPage($inhtml) {
     $curact = array();
 
 //    echo "parseActListPage<br />";
-error_log('parseActListPage');
+if ($conf['debug']) error_log('parseActListPage');
 
 
 //    foreach($inhtml->find($conf['acontainer'].' li div.wrap-post') as $act) {
@@ -62,7 +63,7 @@ error_log('parseActListPage');
 	    $actions[$id] = $curact;
 	}
     }
-error_log('parseActListPage count: ['.count($actions).']');
+if ($conf['debug']) error_log('parseActListPage count: ['.count($actions).']');
 }
 
 function _getDatesFromStr($s) {
@@ -90,7 +91,7 @@ function parseActPage($id,$inhtml,$skip=false) {
     $actions = &$_SESSION['actions'];
 
 //    echo "parseActPage $id<br />";
-error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
+if ($conf['debug']) error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 
     foreach($inhtml[$conf['bcontainer'].' li.item'] as $b) {
@@ -143,7 +144,7 @@ error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 //break;
     }
-error_log('parseActPage id ['.$id.'] book_count['.count($actions[$id]['books']).']');
+if ($conf['debug']) error_log('parseActPage id ['.$id.'] book_count['.count($actions[$id]['books']).']');
 
 }
 
@@ -154,7 +155,7 @@ function parseActions($id,$inhtml,$skip=false) {
 $start = microtime(true);
 
 //    echo "parseActions $id<br />";
-error_log('parseActions id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
+if ($conf['debug']) error_log('parseActions id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 //  Дополнение массива акций данными Начало/Коцец периода
     $tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
@@ -179,10 +180,10 @@ error_log('parseActions id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 	}
 
     //var_dump($actions[$id]['books']);
-    error_log('parseActions id ['.$id.'] book_count['.count($actions[$id]['books']).']');
+if ($conf['debug']) error_log('parseActions id ['.$id.'] book_count['.count($actions[$id]['books']).']');
 
 
-error_log('TIME '.round(microtime(true) - $start, 4).' s');
+if ($conf['debug']) error_log('TIME '.round(microtime(true) - $start, 4).' s');
 }
 
 function parseActionPeriod($id,$inhtml) {
@@ -192,13 +193,13 @@ function parseActionPeriod($id,$inhtml) {
 $start = microtime(true);
 
 //    echo "parseActions $id<br />";
-error_log('parseActionPeriod id ['.$id.']');
+if ($conf['debug']) error_log('parseActionPeriod id ['.$id.']');
 
 //  Дополнение массива акций данными Начало/Коцец периода
     $tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
     $actions[$id] = array_merge($actions[$id],_getDatesFromStr($tstr));
 
-error_log('TIME '.round(microtime(true) - $start, 4).' s');
+if ($conf['debug']) error_log('TIME '.round(microtime(true) - $start, 4).' s');
 }
 
 ?>
