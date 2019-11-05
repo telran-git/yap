@@ -5,6 +5,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+if(!defined('EXPT')) define('EXPT', 7200);  // Время хранения в memcache
+if(!defined('ACTT')) define('ACTT', 1800);   // Время "актуальности" сохранённого
 
 $db_conf = array(
     'type'      => 'firebird',

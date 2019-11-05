@@ -1,0 +1,36 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 31.10.2019, 15:32:08
+    Author     : telran
+*/
+textarea#log {
+    height: 200px;
+    width: 100%;
+    resize: none;
+}
+.d_input {
+    text-align: right;
+    float: right;
+    width: 20рх;
+}
+
+
+table {font-size:12px;color:#333333;border-width: 1px;border-color: #729ea5;border-collapse: collapse;}
+table th {text-align: center;font-size:12px;background-color:#acc8cc;border-width: 1px;padding: 8px;border-style: solid;border-color: #729ea5;text-align:left;}
+table tr.data_row {background-color:#d4e3e5;}
+table td {font-size:12px;border-width: 1px;padding: 4px 8px;border-style: solid;border-color: #729ea5;text-align: center;}
+table td.left {text-align: left;}
+table td.right {text-align: right;}
+table tr.data_row:hover {background-color:#ffffff;}
+button {
+    cursor: pointer;
+    padding: 4px 8px;
+    background-color: #acc8cc;
+    border-radius:5px;
+    /* border: 3px solid #1b4869; */
+    }
+button:hover {background-color:#d4e3e5;}

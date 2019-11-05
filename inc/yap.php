@@ -11,10 +11,13 @@ $bpages = array();
 
 function readByLink($lnk) {
     global $conf;
+$start = microtime(true);
+
 if ($conf['debug']) error_log('readByLink href ['.$lnk.']');
 
     $doc = phpQuery::newDocumentFile($lnk);
 
+if ($conf['debug']) error_log('readByLink TIME '.round(microtime(true) - $start, 4).' s');
     return $doc;
 }
 
@@ -44,8 +47,10 @@ if ($conf['debug']) error_log('makePageList');
 
 function parseActListPage($inhtml) {
     global $conf;
+    global $actions;
+//    $actions = &$_SESSION['actions'];
+    global $st;
 
-    $actions = &$_SESSION['actions'];
     $curact = array();
 
 //    echo "parseActListPage<br />";
@@ -61,14 +66,18 @@ if ($conf['debug']) error_log('parseActListPage');
 	    $id = basename($curact['href']);
 
 	    $actions[$id] = $curact;
+//	    $st->inc('aprocessed');
+	    $st->set_aprocessed(count($actions));
 	}
     }
 if ($conf['debug']) error_log('parseActListPage count: ['.count($actions).']');
+    $st->set_aprocessed(count($actions));
 }
 
 function _getDatesFromStr($s) {
     global $conf;
-    $actions = &$_SESSION['actions'];
+    global $actions;
+//    $actions = &$_SESSION['actions'];
 
 //  Период проведения акции с 15 октября по 22 октября 2019 года
     $months = array('января' => '01', 'февраля' => '02', 'марта' => '03', 'апреля' => '04', 'мая' => '05', 'июня' => '06', 'июля' => '07', 'августа' => '08', 'сентября' => '09', 'октября' => '10', 'ноября' => '11', 'декабря' => '12');
@@ -88,7 +97,10 @@ function _getDatesFromStr($s) {
 
 function parseActPage($id,$inhtml,$skip=false) {
     global $conf;
-    $actions = &$_SESSION['actions'];
+    global $actions;
+//    $actions = &$_SESSION['actions'];
+    global $st;
+    global $m;
 
 //    echo "parseActPage $id<br />";
 if ($conf['debug']) error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
@@ -127,6 +139,7 @@ if ($conf['debug']) error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true'
 //	    $actions[$id]['books'][$bid] = $book;
 	    unset($book);
 
+	    $st->inc('bprocessed');
 //	    $book['dsc'] = pq($b)->find('div.discount')[0]->text();
 //	    $book['href'] = pq($b)->find('div.content a')[0]->attr('href');
 //	    $book['code'] = pq($b)->find('div.label-sku span.code')[0]->text();
@@ -144,62 +157,122 @@ if ($conf['debug']) error_log('parseActPage id ['.$id.'] skip ['.($skip ? 'true'
 
 //break;
     }
+    $st->set_bprocessed(count($actions[$id]['books']));
 if ($conf['debug']) error_log('parseActPage id ['.$id.'] book_count['.count($actions[$id]['books']).']');
-
+    $m->set('actions', $actions, EXPT);
 }
 
 function parseActions($id,$inhtml,$skip=false) {
     global $conf;
-    $actions = &$_SESSION['actions'];
+    global $actions;
+    global $st;
+    global $m;
+//    $actions = &$_SESSION['actions'];
 
 $start = microtime(true);
 
-//    echo "parseActions $id<br />";
+    $exp = time() - $actions[$id]['books']['_time'];
+if ($conf['debug']) error_log('! prepareB $actions['.$id.'][books][_time] : ['.$actions[$id]['books']['_time'].']');
+if ($conf['debug']) error_log('! prepareB $exp : ['.$exp.']');
+if ($conf['debug']) error_log('! prepareB ACTT : ['.ACTT.']');
+//    if ((time() - $action['_time']) < ACTT) {
+    if (($exp) < ACTT) {
+//	echo json_encode(array('action' => "Данные актуальны..."));
+	$st->set_action("Данные по акции актуальны...");
+    } else {
+
 if ($conf['debug']) error_log('parseActions id ['.$id.'] skip ['.($skip ? 'true' : 'false').']');
 
 //  Дополнение массива акций данными Начало/Коцец периода
-    $tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
-    $actions[$id] = array_merge($actions[$id],_getDatesFromStr($tstr));
+	$tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
+	$actions[$id] = array_merge($actions[$id],_getDatesFromStr($tstr));
 
-    $actions[$id]['bpages'] = array();
+	$actions[$id]['bpages'] = array();
 // Формирование массива ссылок страниц списка книг в текущей акции
-    makePageList($inhtml,$actions[$id]['bpages']);
+	$st->set_action("Формирование списка страниц книг");
+	makePageList($inhtml,$actions[$id]['bpages']);
 
-//
-    $actions[$id]['books'] = array();
+	$actions[$id]['books'] = array();
 
-    parseActPage($id,$inhtml,$skip);
+	$st->set_action("Парсинг книг на первой странице акции");
+	parseActPage($id,$inhtml,$skip);
 
 // Если список книг больше чем на одну страницу - цикл по страницам 2+
-    if (count($actions[$id]['bpages']) > 0)
-	foreach ($actions[$id]['bpages'] as $curlnk) {
-	    if (isset($html)) unset($html);
+	$cnt = 1;
+	if (count($actions[$id]['bpages']) > 0)
+	    foreach ($actions[$id]['bpages'] as $curlnk) {
+		if (isset($html)) unset($html);
+		$cnt++;
+		$st->set_action("Парсинг книг на ".$cnt."й странице акции");
+		$html = readByLink($curlnk);
+		parseActPage($id,$html,$skip);
+	    }
 
-	    $html = readByLink($curlnk);
-	    parseActPage($id,$html,$skip);
-	}
+	$actions[$id]['books']['_time'] = time();
 
-    //var_dump($actions[$id]['books']);
 if ($conf['debug']) error_log('parseActions id ['.$id.'] book_count['.count($actions[$id]['books']).']');
 
+	$action['_time'] = time();
+	$m->set('actions', $actions, EXPT);
 
+    }
 if ($conf['debug']) error_log('TIME '.round(microtime(true) - $start, 4).' s');
 }
 
 function parseActionPeriod($id,$inhtml) {
     global $conf;
-    $actions = &$_SESSION['actions'];
+    global $actions;
+//    $actions = &$_SESSION['actions'];
+    global $st;
 
 $start = microtime(true);
 
-//    echo "parseActions $id<br />";
 if ($conf['debug']) error_log('parseActionPeriod id ['.$id.']');
 
 //  Дополнение массива акций данными Начало/Коцец периода
     $tstr = trim($inhtml['div.blog-post div.content div.date-wrap'][0]->text());
     $actions[$id] = array_merge($actions[$id],_getDatesFromStr($tstr));
 
-if ($conf['debug']) error_log('TIME '.round(microtime(true) - $start, 4).' s');
+if ($conf['debug']) error_log('parseActionPeriod TIME '.round(microtime(true) - $start, 4).' s');
+}
+
+function prepareActionList() {
+    global $conf;
+    global $actions;
+    global $st;
+//    $actions = &$_SESSION['actions'];
+
+    $html = readByLink($conf['rootlnk'].$conf['abooks']);
+//    $html = readByLink('tmp/alist.html');
+
+// Формирование массива ссылок страниц списка акций
+    $st->set_action("Формирование списка страниц акций");
+    makePageList($html,$apages);
+//var_dump($apages);
+
+// Заполнение массива акций данными Название/Скидка/Ссылка
+    $st->set_action("Заполнение списка акций");
+    parseActListPage($html);
+//var_dump($actions);
+
+// Если список акций больше чем на одну страницу - цикл по страницам 2+
+    if (count($apages) > 0)
+	foreach ($apages as $curlnk) {
+	    $html = readByLink($curlnk);
+	    parseActListPage($html);
+	}
+
+//  Цикл по списку акций, парсинг содержимого страницы акции
+    $st->set_action("Получения периода действия акций");
+    $st->set('aprocessed',0);
+    if (count($actions) > 0)
+	foreach ($actions as $id => $act) {
+	    if ($id == "_time") continue;	    //	"Служебное поле" - время актуализации данных
+	    $html = readByLink($act['href']);
+	    parseActionPeriod($id,$html);
+	    $st->inc('aprocessed');
+	}
+    $st->set_aprocessed(count($actions));
 }
 
 ?>
