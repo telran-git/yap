@@ -1,18 +1,36 @@
 <?php
 include_once('inc/config.php');
 include_once('inc/xlsxwriter.class.php');
+include_once('inc/state.php');
+
+
+if (!isset($_SESSION))
+    session_start();
+
+if (class_exists('Memcached'))
+    $m = new Memcached();
+else
+    $m = new Memcache();
+
+$m->addServer('127.0.0.1', 11211);// or die(«Could not connect»);
+
+$st = new State();
+//if (!isset($_SESSION['st']))
+////    if (!isset($_SESSION['actions']))
+//	$_SESSION['st'] = new State();
+//
+//$st = &$_SESSION['st'];
 
 include_once('inc/yap.php');
 
-if (!isset($_REQUEST['submit']))
-//    if (!isset($_SESSION['actions']))
-	$_SESSION['actions'] = array();
 
-$actions = &$_SESSION['actions'];
+$actions = $m->get('actions');
+if ($m->getResultCode() !== Memcached::RES_SUCCESS) // item does not exist ($item is probably false)
+    $actions = array();
 
 
-$apages = array();
-$bpages = array();
+// if (!isset($_REQUEST['submit'])) { // главная страница без параметров
+
 
 function  writeXSLX($rst) {
     global $actions;
@@ -43,10 +61,12 @@ function  writeXSLX($rst) {
     $writer->writeSheetHeader($sheet_name, $header );
 
     foreach ($actions as $aid => $act) {
+	if ($aid == "_time") continue;	    //	"Служебное поле" - время актуализации данных
 	if (count($rst))
 	    if (!in_array($aid, $rst)) continue;
 	if (isset($act['books']) && is_array($act['books']))
-	foreach ($act['books'] as $book) {
+	foreach ($act['books'] as $bid => $book) {
+	    if ($bid == "_time") continue;	    //	"Служебное поле" - время актуализации данных
 	    $writer->writeSheetRow($sheet_name, array(
 		$act['title'],
 		$act['sdate'],
@@ -66,6 +86,21 @@ function  writeXSLX($rst) {
 	}
     }
 
+
+
+    header("Cache-Control: public");
+    header("Content-Description: File Transfer");
+    header("Content-Transfer-Encoding: binary");
+    header("Content-Type: binary/octet-stream");
+
+//    header("Content-Type: application/force-download");
+//    header("Content-Type: application/octet-stream");
+//    header("Content-Type: application/download");
+
+    header("Cache-Control: public");
+    header("Content-Description: File Transfer");
+    header("Content-Transfer-Encoding: binary");
+    header("Content-Type: binary/octet-stream");
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $filename . '.xlsx"');
 //    echo $writer->writeToString();
@@ -84,44 +119,23 @@ function showActTbl() {
 function df($d) { return date('d.m.Y',strtotime($d)); }
 $df = 'df';
 
-$out = <<<EOT
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title></title>
-	<style type="text/css">
-	    table {font-size:12px;color:#333333;border-width: 1px;border-color: #729ea5;border-collapse: collapse;}
-	    table th {text-align: center;font-size:12px;background-color:#acc8cc;border-width: 1px;padding: 8px;border-style: solid;border-color: #729ea5;text-align:left;}
-	    table tr {background-color:#d4e3e5;}
-	    table td {font-size:12px;border-width: 1px;padding: 4px 8px;border-style: solid;border-color: #729ea5;text-align: center;}
-	    table td.left {text-align: left;}
-	    table td.right {text-align: right;}
-	    table tr:hover {background-color:#ffffff;}
-	    button {
-		cursor: pointer;
-		padding: 4px 8px;
-		background-color: #acc8cc;
-		border-radius:5px;
-		/* border: 3px solid #1b4869; */
-		}
-	    button:hover {background-color:#d4e3e5;}
-	</style>
-	<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+//<!DOCTYPE html>
+//<html>
+//    <head>
+//        <meta charset="UTF-8">
+//        <title></title>
+//	<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+//        <link href="inc/main.css" rel="stylesheet" type="text/css" />
+//
+//    </head>
+//    <body>
+//	<form id="action_form" action="test.php" method="post" target="_blank">
 
-    </head>
-    <body>
-    <script type="text/javascript" charset="utf-8">
-	$(document).ready(function() {
-	    $('#selectAll').click(function(e){
-		var table= $(e.target).closest('table');
-		$('td input:checkbox',table).prop('checked',this.checked);
-	    });
-	});
-    </script>
+
+$out = <<<EOT
 	<h3>Список актульных акций на сайте</h3><br />
 
-	<form action="" method="post" target="_blank">
+	<form id="action_form" action="test.php" method="post">
 	<table>
 	    <tr>
 		<th><INPUT type="checkbox" id="selectAll" name="chk[]" /></th>
@@ -134,36 +148,72 @@ $out = <<<EOT
 	
 EOT;
 
+//		$.ajax({
+//		    type: form.attr('method'),
+//		    url: form.attr('action'),
+//		    data: data
+//		}).done(function() {
+//		    console.log('success');
+//		}).fail(function() {
+//		    console.log('fail');
+//		});
+
+
     foreach ($actions as $id => $act) {
+	if ($id == "_time") continue;	    //	"Служебное поле" - время актуализации данных
+	
 $out .= <<<EOT
-		<tr id="$id]">
-		    <td><INPUT type="checkbox" name="chk[]" value="$id"></td>
-		    <td class="left"><a href="$act[href]">$act[title]</a></td>
-		    <td>{$df($act["sdate"])}</td>
-		    <td>{$df($act["edate"])}</td>
-		    <td class="right">$act[dsc] %</td>
-		    <td><button type="submit" name="submit" value="$id">load</button></td>
-		</tr>
+	    <tr id="$id" class="data_row">
+		<td class="ch_outer"><INPUT type="checkbox" name="chk[]" value="$id"></td>
+		<td class="left"><a href="$act[href]">$act[title]</a></td>
+		<td>{$df($act["sdate"])}</td>
+		<td>{$df($act["edate"])}</td>
+		<td class="right">$act[dsc] %</td>
+		<td><button type="submit" name="submit" value="$id">load</button></td>
+	    </tr>
 EOT;
 
     }
-//		    <td><button type="submit" name="actid" value="$id">load</button></td>
-//		    <td>&ensp;</td>
+
+//	    $('form').submit(function(e) {
+//		var form = $(this);
+//		var data = form.serializeArray();
+//		$.ajax({
+//		    type: form.attr('method'),
+//		    url: form.attr('action'),
+//		    data: form.serialize()
+//		}).done(function() {
+//		    console.log('success');
+//		}).fail(function() {
+//		    console.log('fail');
+//		});
+//		//отмена действия по умолчанию для кнопки submit
+//		e.preventDefault();
+//	    });
 
 
 $out .= <<<EOT
-	    </table>
+	    <tr>
+		<td colspan="6"></td>
+	    </tr>
+	    <tr style="background-color:#d4e3e5;">
+		<td><input type="checkbox" name="skip" checked="true"></td>
+		<td class="left" colspan="5">Игнорировать книги без скидок</td>
+	    </tr>
+	</table>
 	    <br />
-	    <div class="chk" style="padding: 4px 8px;">
-		<input type="checkbox" name="skip" checked="true"><span>Игнорировать книги без скидок</span>
-	    </div>
 	    <button type="submit" name="submit" value="selected">load selected</button>
 	    <button type="submit" name="submit" value="all">load all</button>
 	</form>
-    </body>
-</html>
 EOT;
 
+//    </body>
+//</html>
+
+
+//	    <div class="chk" style="padding: 4px 8px;">
+//		<input type="checkbox" name="skip" checked="true"><span>Игнорировать книги без скидок</span>
+//	    </div>
 //	    <button type="submit" name="actid" value="selected">load selected</button>
 
 //	    <input type="submit" name="submit" value="Submit"/>
@@ -174,46 +224,116 @@ echo $out;
 
 }
 
+//if ($conf['debug']) {
+//    error_log('------------------------------------------------------------------');
+//    error_log('IN $_SESSION id ['.session_id().'] $_SESSION ['.print_r($_SESSION,true).']');
+//}
 
-if ($conf['debug'] && is_array($_REQUEST) && count($_REQUEST)) {
+function prepareActions() {
+    global $conf;
+    global $st;
+    global $m;
+    global $actions;
+
+if ($conf['debug']) error_log('! START action "prepare"');
+    header('Content-Type: application/json');
+
+    $exp = time() - $actions['_time'];
+if ($conf['debug']) error_log('! prepare $action[_time] : ['.$actions['_time'].']');
+if ($conf['debug']) error_log('! prepare $exp : ['.$exp.']');
+if ($conf['debug']) error_log('! prepare ACTT : ['.ACTT.']');
+//    if ((time() - $action['_time']) < ACTT) {
+    if (($exp) < ACTT) {
+//	echo json_encode(array('action' => "Данные актуальны..."));
+	echo json_encode(array('action' => "Данные актуальны...",'exp' => $exp));
+    } else {
+
+	$st->start('Составление списка акций');
+
+	prepareActionList();
+
+	$actions['_time'] = time();
+	$m->set('actions', $actions, EXPT);
+
+if ($conf['debug']) error_log('! END prepare count($actions) ['.count($actions).']');
+
+	$st->stop();
+
+	echo json_encode(array('action' => "Завершено"));
+    }
+}
+
+function checkState() {
+    global $conf;
+    global $st;
+//if ($conf['debug']) error_log('? check $_SESSION ['.print_r($_SESSION,true).']');
+if ($conf['debug']) error_log('? check >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    header('Content-Type: application/json');
+
+//    $state = $m->get('state');
+//    if (!isset($state['preparing']) || $state['preparing'] == false)
+//	echo json_encode(array('error' => "Ошибка: Парсинг не выполняется"));
+//    else {
+//	echo json_encode($state);
+//    }
+    $tmp = $st->get();
+if ($conf['debug']) error_log('? check state ['.print_r($tmp,true).']');
+
+    echo json_encode($tmp);
+//    echo json_encode($st->get());
+if ($conf['debug']) error_log('? check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+}
+
+// ================================================================================
+//if ($conf['debug'] && is_array($_REQUEST) && count($_REQUEST)) {
 //var_dump($_REQUEST);
 //print_r($_REQUEST);
-error_log('$_REQUEST ['.print_r($_REQUEST,true).']');
+error_log('IN $_REQUEST ['.print_r($_REQUEST,true).']');
 //die();
-}
-if ($conf['debug']) error_log('$_REQUEST[submit] ['.$_REQUEST['submit'].']');
+//}
 
-if ($conf['debug']) error_log('START count($actions) ['.count($actions).']');
 
-if (isset($_REQUEST['submit'])) {
+if (isset($_REQUEST['check'])) {
+    checkState();
+} elseif (isset($_REQUEST['prepare'])) {
+    prepareActions();
+} elseif (isset($_REQUEST['showprepared']) && count($actions)) {
+    showActTbl();
+} elseif (isset($_REQUEST['submit'])) {
     $error = false;
     $errorstr = '';
     $rst = array();
     $skip = isset($_REQUEST['skip']);
+//    $st->start('Составление списка книг');
+
 
     if (is_numeric($_REQUEST['submit'])) {
 	if (isset($actions[$_REQUEST['submit']]) && is_array($actions[$_REQUEST['submit']])) {
 	    $rst[] = $_REQUEST['submit'];
 //  Парсинг содержимого страницы акции с указанным ID
+	    $st->start("Парсинг содержимого акции с указанным ID");
 	    if (isset($html)) unset($html);
 	    $html = readByLink($actions[$_REQUEST['submit']]['href']);
             parseActions($_REQUEST['submit'],$html,$skip);
 	} else {
 	    $error = true;
-	    $errorstr .= "!!!! Can`t find actions with ID [".$_REQUEST['submit']."]<br />\n";
+	    $errorstr .= '! Не найдена акция ID с указанным ID ['.$_REQUEST['submit'].']';
 	}
     } elseif ($_REQUEST['submit'] == 'all') {
 //  Цикл по списку акций, парсинг содержимого страницы акции
+	$st->start("Парсинг содержимого всех акций");
 	if (count($actions) > 0)
 	    foreach ($actions as $id => $act) {
+	    if ($id == "_time") continue;	    //	"Служебное поле" - время актуализации данных
 		if (isset($html)) unset($html);
 		$html = readByLink($act['href']);
 		parseActions($id,$html,$skip);
     //break;
 	    }
     } elseif ($_REQUEST['submit'] == 'selected') {
-	if (isset($_REQUEST['chk'])) {			// Параметн chk вообще присутствует
+	if (isset($_REQUEST['chk'])) {			// Параметр chk вообще присутствует
 	    if (is_array($_REQUEST['chk']) && count($_REQUEST['chk']) > 0) { // ...он массив, и не пустой
+		$st->start("Парсинг содержимого указанных акций");
 		foreach($_REQUEST['chk'] as $aid) {
 		    if (array_key_exists($aid,$actions)) {
 			$rst[] = $aid;
@@ -236,55 +356,24 @@ if (isset($_REQUEST['submit'])) {
     }
 
 //var_dump($actions);
+    $action['_time'] = time();
+    $m->set('actions', $actions, EXPT);
 
 if ($conf['debug']) error_log('END count($actions) ['.count($actions).']');
 
     if(!$error)
 	writeXSLX($rst);
     else {
-        header('Content-Type: text/html; charset=utf-8');
-	echo $errorstr;
+	$st->error($errorstr);
+
+//        header('Content-Type: text/html; charset=utf-8');
+//	echo $errorstr;
+        header('Content-Type: application/json');
+	echo json_encode($st->get());
     }
-    
-} else {
-//function main() {
-//    global $conf;
-//    global $apages;
-//    global $actions;
 
-    $html = readByLink($conf['rootlnk'].$conf['abooks']);
-//    $html = readByLink('tmp/alist.html');
+    $st->stop();
 
-// Формирование массива ссылок страниц списка акций
-    makePageList($html,$apages);
-//var_dump($apages);
-
-// Заполнение массива акций данными Название/Скидка/Ссылка
-    parseActListPage($html);
-//var_dump($actions);
-
-// Если список акций больше чем на одну страницу - цикл по страницам 2+
-    if (count($apages) > 0)
-	foreach ($apages as $curlnk) {
-	    $html = readByLink($curlnk);
-	    parseActListPage($html);
-	}
-
-//  Цикл по списку акций, парсинг содержимого страницы акции
-    if (count($actions) > 0)
-	foreach ($actions as $id => $act) {
-	    $html = readByLink($act['href']);
-	    parseActionPeriod($id,$html);
-//break;
-	}
-
-//var_dump($actions);
-
-//}
-if ($conf['debug']) error_log('END count($actions) ['.count($actions).']');
-
-
-    showActTbl();
 }
 
 ?>
