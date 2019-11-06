@@ -44,21 +44,19 @@ $(document).ready(function() {
     function checkPreparingStatus() {
 
 	$.ajax({
-	    type: "POST",
+	    type: settings.httpMethod,
 	    url: 'test.php',
 	    dataType: "json",
 	    data: "check",
 	    async: true,
 	    processData: false,
 	    success: function(data, textStatus) {
-//			alert('ajax success ['+data+"] ["+textStatus+"]");
-//			$('#log').val($('#log').val()+"\n"+data+"] ["+textStatus+"]");
 		if (data.hasOwnProperty('error')) {
 			$('#action').val(data.error);
 			$('#log').val("");
 			preparing = false;
 		} else {
-		    console.log(data);
+//		    console.log(data);
 		    if (preparing) {
 			if (data.hasOwnProperty('action')) {
 			    $('#action').val(data.action);
@@ -83,8 +81,7 @@ $(document).ready(function() {
 	    },
 	    error: function(data, textStatus) {
 		$('#action').val("Ошибка ajax-запроса...");
-//			alert('ajax error ['+data+"] ["+textStatus+"]");
-		console.log(data);
+//		console.log(data);
 		preparing = false;
 	    },
 	    complete: function(data) {
@@ -112,7 +109,7 @@ $(document).ready(function() {
 
 // Формирование списка акций
     $.ajax({
-	type: "POST",
+	type: settings.httpMethod,
 	url: 'test.php',
 	dataType: "json",
 	data: "prepare",
@@ -125,11 +122,9 @@ $(document).ready(function() {
 	    } else {
 		if (data.hasOwnProperty('action'))
 		    $('#action').val(data.action);
-		console.log(data);
+//		console.log(data);
 
 		setTimeout(function(){
-//		    $( "#preparing-modal" ).dialog('close');
-
 		    $.ajax({
 			url: "test.php?showprepared",
 			cache: false,
