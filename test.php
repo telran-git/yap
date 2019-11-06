@@ -2,15 +2,17 @@
 include_once('inc/config.php');
 include_once('inc/xlsxwriter.class.php');
 include_once('inc/state.php');
-
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 
+    include_once('inc/m2md_win.php');
+        
 
 if (!isset($_SESSION))
     session_start();
 
-if (class_exists('Memcached'))
+//if (class_exists('Memcached'))
     $m = new Memcached();
-else
-    $m = new Memcache();
+//else
+//    $m = new Memcache();
 
 $m->addServer('127.0.0.1', 11211);// or die(«Could not connect»);
 
@@ -25,8 +27,13 @@ include_once('inc/yap.php');
 
 
 $actions = $m->get('actions');
-if ($m->getResultCode() !== Memcached::RES_SUCCESS) // item does not exist ($item is probably false)
-    $actions = array();
+//if (class_exists('Memcached')) {
+if (method_exists($m,'getResultCode')) {
+    if ($m->getResultCode() !== Memcached::RES_SUCCESS) // item does not exist ($item is probably false)
+        $actions = array();
+} else {
+   if (!$actions) $actions = array();
+}
 
 
 // if (!isset($_REQUEST['submit'])) { // главная страница без параметров
@@ -46,9 +53,9 @@ function  writeXSLX($rst) {
       'book_publisher'=>'string',
       'book_lang'=>'string',
       'book_year'=>'string',
-      'book_dsc'=>'integer',
-      'book_old-price'=>'price',
-      'book_special-price'=>'price',
+      'book_dsc'=>'string',
+      'book_old-price'=>'string',
+      'book_special-price'=>'string',
       'book_sitelink'=>'string',
     );
     //  'quantity'=>'#,##0',
@@ -102,6 +109,7 @@ function  writeXSLX($rst) {
     header("Content-Transfer-Encoding: binary");
     header("Content-Type: binary/octet-stream");
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+//    header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $filename . '.xlsx"');
 //    echo $writer->writeToString();
     $writer->writeToStdOut();
@@ -175,23 +183,6 @@ EOT;
 
     }
 
-//	    $('form').submit(function(e) {
-//		var form = $(this);
-//		var data = form.serializeArray();
-//		$.ajax({
-//		    type: form.attr('method'),
-//		    url: form.attr('action'),
-//		    data: form.serialize()
-//		}).done(function() {
-//		    console.log('success');
-//		}).fail(function() {
-//		    console.log('fail');
-//		});
-//		//отмена действия по умолчанию для кнопки submit
-//		e.preventDefault();
-//	    });
-
-
 $out .= <<<EOT
 	    <tr>
 		<td colspan="6"></td>
@@ -210,24 +201,9 @@ EOT;
 //    </body>
 //</html>
 
-
-//	    <div class="chk" style="padding: 4px 8px;">
-//		<input type="checkbox" name="skip" checked="true"><span>Игнорировать книги без скидок</span>
-//	    </div>
-//	    <button type="submit" name="actid" value="selected">load selected</button>
-
-//	    <input type="submit" name="submit" value="Submit"/>
-
-//	    <button name="actid" value="" onclick="loadselected()">load selected</button>
-
 echo $out;
 
 }
-
-//if ($conf['debug']) {
-//    error_log('------------------------------------------------------------------');
-//    error_log('IN $_SESSION id ['.session_id().'] $_SESSION ['.print_r($_SESSION,true).']');
-//}
 
 function prepareActions() {
     global $conf;
@@ -366,8 +342,6 @@ if ($conf['debug']) error_log('END count($actions) ['.count($actions).']');
     else {
 	$st->error($errorstr);
 
-//        header('Content-Type: text/html; charset=utf-8');
-//	echo $errorstr;
         header('Content-Type: application/json');
 	echo json_encode($st->get());
     }

@@ -9,15 +9,13 @@ if(!defined('EXPT')) define('EXPT', 7200);  // Время хранения в me
 if(!defined('ACTT')) define('ACTT', 1800);   // Время "актуальности" сохранённого
 
 $db_conf = array(
-    'type'      => 'firebird',
-    'host'      => 'ss',
-    'db'        => 'd:/fb/iscra_d.fdb',
+    'type'      => '',
+    'host'      => '',
+    'db'        => '',
 //'db' => 'd:/fb/iscra.fdb',
-    'user'      => 'SYSDBA',
+    'user'      => '',
     'pass'      => '',
-    'charset'   => 'WIN1251',
-    'dialect'   => '3',
-    'ver'       => 'FB_1.5',
+    'charset'   => '',
 );
 
 
@@ -27,7 +25,7 @@ $conf = array(
     'pcontainer'   => 'div.pagination',
     'acontainer'   => 'ul.blog-posts__list',
     'bcontainer'   => 'ul.products-grid',
-    'debug'	    =>	true,
+    'debug'	    =>	false,
 );
 
 date_default_timezone_set('Europe/Kiev');
