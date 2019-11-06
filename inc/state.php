@@ -10,21 +10,20 @@ class State {
     private $st = array();
     
     public function __construct($data=null) {
-	if (class_exists('Memcached'))
-	    $this->m = new Memcached();
-	else
-	    $this->m = new Memcache();
+        $this->m = new Memcached();
 
 	$this->m->addServer('127.0.0.1', 11211);// or die(«Could not connect»);
 
-//error_log('* state__construct data['.print_r($data,true).']');
 	if (isset($data))
 	    $this->start($data);
 	else {
 	    $this->st = $this->m->get(ST_KEY);
-//error_log('* state__construct st['.print_r($this->st,true).']');
-	    if ($this->m->getResultCode() !== Memcached::RES_SUCCESS) // item does not exist ($item is probably false)
-		$this->stop();
+            if (method_exists($this->m,'getResultCode')) {
+                if ($this->m->getResultCode() !== Memcached::RES_SUCCESS) // item does not exist ($item is probably false)
+                    $this->stop();
+            } else {
+               if (!$this->st) $this->stop();
+            }
 	}
     }
 
@@ -125,7 +124,7 @@ class State {
 	    "aprocessed"    => 0,
 	    "bprocessed"    => 0,
 	);
-error_log('* state_start['.print_r($this->st,true).']');
+//error_log('* state_start['.print_r($this->st,true).']');
 	return $this->m->set(ST_KEY, $this->st, EXPT);
     }
 
@@ -138,7 +137,7 @@ error_log('* state_start['.print_r($this->st,true).']');
 	    "aprocessed"    => null,
 	    "bprocessed"    => null,
 	);
-error_log('* state_stop ['.print_r($this->st,true).']');
+//error_log('* state_stop ['.print_r($this->st,true).']');
 
 	return $this->m->set(ST_KEY, $this->st, EXPT);
     }
