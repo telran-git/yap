@@ -27,10 +27,12 @@ $conf = array(
     'pcontainer'   => 'div.pagination',
     'acontainer'   => 'ul.blog-posts__list',
     'bcontainer'   => 'ul.products-grid',
-    'debug'	    =>	false,
+    'debug'	    =>	true,
 );
 
 date_default_timezone_set('Europe/Kiev');
 mb_internal_encoding("UTF-8");
+
+error_reporting(E_ALL & ~E_NOTICE);
 
 ?>
